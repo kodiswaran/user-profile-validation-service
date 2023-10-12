@@ -1,0 +1,58 @@
+version: '1'
+services:
+  # kafka & zookeeper setup
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  # dynamodb setup
+  dynamodb:
+    image: "amazon/dynamodb-local:latest"
+    container_name: dynamodb
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./db/dynamodb:/home/dynamodblocal/data"
+    working_dir: /home/dynamodblocal
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    environment:
+      - AWS_ACCESS_KEY_ID=""
+      - AWS_SECRET_ACCESS_KEY=""
+      - AWS_SESSION_TOKEN=""
+      - AWS_DEFAULT_REGION=us-east-1
+
+  # mysql setup
+  mysql:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'user_profile_validation_db'
+      MYSQL_USER: 'admin'
+      MYSQL_PASSWORD: 'admin'
+      MYSQL_ROOT_PASSWORD: 'password123'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - "./db/mysql:/home/mysql/data"
+
+
+  # redis setup
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./db/redis:/home/redis/data"
